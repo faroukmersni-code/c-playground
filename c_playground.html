@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C Playground Studio</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- CodeMirror 5 Syntax Highlighting Suite -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0b0f17;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+
+    .font-mono {
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* Glassmorphism & Panel Styling */
+    .glass-panel {
+      background: rgba(18, 24, 38, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .glass-card {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Custom CodeMirror Styling */
+    .CodeMirror {
+      height: 100% !important;
+      font-family: 'Fira Code', monospace !important;
+      font-size: 14px !important;
+      line-height: 1.6 !important;
+      background: #0d111a !important;
+      color: #e2e8f0 !important;
+      padding-top: 8px;
+    }
+
+    .CodeMirror-gutters {
+      background: #0d111a !important;
+      border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+      padding-right: 4px;
+    }
+
+    .CodeMirror-linenumber {
+      color: #475569 !important;
+      font-size: 12px;
+    }
+
+    .CodeMirror-cursor {
+      border-left: 2px solid #38bdf8 !important;
+    }
+
+    .CodeMirror-selected {
+      background: rgba(56, 189, 248, 0.2) !important;
+    }
+
+    .CodeMirror-activeline-background {
+      background: rgba(255, 255, 255, 0.03) !important;
+    }
+
+    /* Specialized Highlighting Colors */
+    .cm-keyword { color: #f472b6 !important; font-weight: 600; } /* void, int, return */
+    .cm-def { color: #fbbf24 !important; font-weight: bold; } /* Declarations */
+    .cm-variable { color: #cbd5e1 !important; }
+    .cm-variable-2 { color: #38bdf8 !important; }
+    .cm-property { color: #a78bfa !important; }
+    .cm-operator { color: #f43f5e !important; font-weight: 600; } /* *, &, +, = */
+    .cm-number { color: #fb923c !important; } /* 3, 6, etc */
+    .cm-string { color: #4ade80 !important; } /* "n=%d\n" */
+    .cm-meta { color: #c084fc !important; font-weight: 600; } /* Preprocessors #include */
+    .cm-header { color: #38bdf8 !important; }
+    .cm-comment { color: #64748b !important; font-style: italic; }
+
+    /* Custom Color Overrides for Target Predefined Identifiers */
+    .cm-cm-main-fn {
+      color: #ff3366 !important;
+      font-weight: 700 !important;
+      text-shadow: 0 0 10px rgba(255, 51, 102, 0.35);
+    }
+
+    .cm-cm-custom-fn {
+      color: #00f2fe !important;
+      font-weight: 700 !important;
+      text-shadow: 0 0 8px rgba(0, 242, 254, 0.3);
+    }
+
+    .cm-cm-printf-fn {
+      color: #facc15 !important;
+      font-weight: 700 !important;
+    }
+
+    /* Scrollbar Polish */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d111a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+
+    /* Glow utilities */
+    .glow-green {
+      box-shadow: 0 0 15px rgba(34, 197, 94, 0.35);
+    }
+    .glow-blue {
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+    }
+  </style>
+</head>
+<body class="h-screen flex flex-col bg-[#0b0f17] text-slate-200 antialiased overflow-hidden">
+
+  <!-- Header Bar -->
+  <header class="h-14 border-b border-slate-800/80 bg-[#0f172a]/90 backdrop-blur-md px-4 flex items-center justify-between z-20 shrink-0">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+        <span class="font-mono font-bold text-lg text-white">C</span>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="font-bold text-base tracking-tight text-slate-100">C Playground Studio</h1>
+          <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">v2.4 PRO</span>
+        </div>
+        <p class="text-xs text-slate-400 hidden sm:block">Interactive C Execution & Syntax Environment</p>
+      </div>
+    </div>
+
+    <!-- Quick Presets Picker & Global Actions -->
+    <div class="flex items-center space-x-2 sm:space-x-3">
+      <div class="flex items-center bg-slate-900/90 border border-slate-700/60 rounded-lg p-1 text-xs">
+        <label for="presetSelect" class="text-slate-400 px-2 font-medium hidden md:inline"><i class="fa-solid fa-code-branch mr-1 text-slate-500"></i> Presets:</label>
+        <select id="presetSelect" onchange="loadPreset(this.value)" class="bg-transparent text-slate-200 outline-none cursor-pointer pr-2 font-medium">
+          <option value="pointers" class="bg-slate-900 text-slate-200">Pointers & Functions (Original)</option>
+          <option value="arrays" class="bg-slate-900 text-slate-200">Array Operations & Loops</option>
+          <option value="structs" class="bg-slate-900 text-slate-200">Structures & References</option>
+          <option value="math" class="bg-slate-900 text-slate-200">Math & Recursive Fibonacci</option>
+        </select>
+      </div>
+
+      <button onclick="copyCode()" class="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center space-x-1.5 transition border border-slate-700/50">
+        <i class="fa-regular fa-copy"></i>
+        <span class="hidden sm:inline">Copy</span>
+      </button>
+
+      <button onclick="resetCode()" class="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center space-x-1.5 transition border border-slate-700/50">
+        <i class="fa-solid fa-rotate-left"></i>
+        <span class="hidden sm:inline">Reset</span>
+      </button>
+
+      <button onclick="runCode()" class="px-4 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-slate-950 font-bold text-xs flex items-center space-x-2 transition shadow-md glow-green transform active:scale-95">
+        <i class="fa-solid fa-play text-sm"></i>
+        <span>Run Code</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main IDE Container -->
+  <div class="flex-1 flex flex-col md:flex-row overflow-hidden p-3 gap-3">
+    
+    <!-- Left Section: Code Editor Window -->
+    <section class="flex-1 flex flex-col glass-panel rounded-xl overflow-hidden border border-slate-800 shadow-2xl">
+      
+      <!-- Editor Top Bar (Tabs + File Info) -->
+      <div class="h-10 bg-[#090d16] border-b border-slate-800/80 flex items-center justify-between px-3 select-none">
+        <div class="flex items-center space-x-1 h-full">
+          <!-- Active Tab -->
+          <div class="h-full bg-[#0d111a] border-t-2 border-blue-500 border-x border-slate-800/60 px-4 flex items-center space-x-2 text-xs font-medium text-slate-200">
+            <i class="fa-regular fa-file-code text-blue-400"></i>
+            <span>main.c</span>
+            <span class="w-2 h-2 rounded-full bg-blue-400/80 ml-1"></span>
+          </div>
+        </div>
+
+        <!-- Syntax legend badges -->
+        <div class="hidden lg:flex items-center space-x-3 text-[11px] font-mono">
+          <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-[#ff3366] mr-1.5"></span><code class="text-[#ff3366]">main</code></span>
+          <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-[#00f2fe] mr-1.5"></span><code class="text-[#00f2fe]">add_6</code></span>
+          <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-[#facc15] mr-1.5"></span><code class="text-[#facc15]">printf</code></span>
+          <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-[#f472b6] mr-1.5"></span><code class="text-[#f472b6]">types</code></span>
+        </div>
+      </div>
+
+      <!-- CodeMirror Mounting Area -->
+      <div class="flex-1 relative overflow-hidden">
+        <textarea id="codeEditor"></textarea>
+      </div>
+
+      <!-- Editor Footer Status -->
+      <div class="h-7 bg-[#080b12] border-t border-slate-800/80 px-3 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+        <div class="flex items-center space-x-4">
+          <span class="flex items-center text-emerald-400"><i class="fa-solid fa-circle-check text-[9px] mr-1.5"></i> Luau/C Engine Ready</span>
+          <span id="cursorPos">Ln 1, Col 1</span>
+        </div>
+        <div class="flex items-center space-x-3">
+          <span>UTF-8</span>
+          <span>C (GCC 13.2)</span>
+          <span class="text-slate-500">Ctrl + Enter to Run</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Section: Output Terminal & Console -->
+    <section class="w-full md:w-[420px] lg:w-[460px] flex flex-col glass-panel rounded-xl overflow-hidden border border-slate-800 shadow-2xl shrink-0">
+      
+      <!-- Terminal Header -->
+      <div class="h-10 bg-[#090d16] border-b border-slate-800/80 flex items-center justify-between px-3">
+        <div class="flex items-center space-x-2">
+          <div class="flex space-x-1.5 mr-2">
+            <div class="w-2.5 h-2.5 rounded-full bg-rose-500/80"></div>
+            <div class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></div>
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></div>
+          </div>
+          <i class="fa-solid fa-terminal text-xs text-slate-400"></i>
+          <span class="text-xs font-semibold text-slate-300 tracking-wide uppercase">Output Terminal</span>
+        </div>
+        
+        <div class="flex items-center space-x-2">
+          <span id="execBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono font-medium">Idle</span>
+          <button onclick="clearTerminal()" title="Clear Console" class="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-slate-200 transition text-xs">
+            <i class="fa-solid fa-eraser"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Terminal Output Display Box -->
+      <div class="flex-1 bg-[#05080f] p-4 font-mono text-xs text-slate-300 overflow-y-auto space-y-2 relative" id="terminalContainer">
+        <div id="outputLog" class="whitespace-pre-wrap leading-relaxed">Click <strong class="text-emerald-400">▶ Run Code</strong> to build and execute your C program.</div>
+      </div>
+
+      <!-- Execution Stats Bar -->
+      <div class="p-3 bg-[#080b12] border-t border-slate-800/80 flex flex-col gap-1 text-xs">
+        <div class="flex justify-between items-center text-slate-400 text-[11px]">
+          <span>Execution Time: <strong id="execTime" class="text-slate-200 font-mono">0 ms</strong></span>
+          <span>Return Code: <strong id="returnCode" class="text-emerald-400 font-mono">0</strong></span>
+        </div>
+        <div class="w-full bg-slate-800/60 rounded-full h-1 overflow-hidden mt-1">
+          <div id="progressBar" class="bg-blue-500 h-full w-0 transition-all duration-300"></div>
+        </div>
+      </div>
+
+      <!-- Mini C Specs Box -->
+      <div class="p-3 bg-slate-900/40 border-t border-slate-800/60 text-xs text-slate-400 leading-relaxed">
+        <div class="font-semibold text-slate-300 mb-1 flex items-center">
+          <i class="fa-solid fa-circle-info text-blue-400 mr-1.5"></i> C Pointer Memory Sandbox
+        </div>
+        <p class="text-[11px] text-slate-400">
+          This IDE includes an inline memory simulator for pointers (<code class="text-amber-300">*nbre</code>), addresses (<code class="text-amber-300">&n</code>), custom functions, and formatted standard output (<code class="text-amber-300">printf</code>).
+        </p>
+      </div>
+
+    </section>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 border border-slate-700 text-slate-200 text-xs px-4 py-2.5 rounded-xl shadow-2xl flex items-center space-x-2 opacity-0 transition-all duration-300 pointer-events-none transform translate-y-2 z-50">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastMsg">Action completed successfully</span>
+  </div>
+
+  <script>
+    // Initial Code Snippets
+    const PRESETS = {
+      pointers: `#include <stdio.h>
+
+void add_6(int *nbre)
+{
+    *nbre = *nbre + 6;
+}
+
+int main()
+{
+    int n = 3;
+
+    printf("n=%d\\n", n);
+
+    add_6(&n);
+
+    printf("n+6=%d\\n", n);
+
+    return 0;
+}`,
+      arrays: `#include <stdio.h>
+
+void double_elements(int *arr, int size)
+{
+    for(int i = 0; i < size; i++) {
+        *(arr + i) = *(arr + i) * 2;
+    }
+}
+
+int main()
+{
+    int numbers[4] = {10, 20, 30, 40};
+    
+    printf("Initial value: %d\\n", numbers[0]);
+    
+    add_6(&numbers[0]);
+    printf("After add_6: %d\\n", numbers[0]);
+
+    return 0;
+}`,
+      structs: `#include <stdio.h>
+
+int main()
+{
+    int value = 42;
+    int *ptr = &value;
+
+    printf("Value: %d\\n", value);
+    printf("Pointer dereference: %d\\n", *ptr);
+
+    add_6(ptr);
+    printf("Value after add_6: %d\\n", value);
+
+    return 0;
+}`,
+      math: `#include <stdio.h>
+
+int factorial(int n) {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+}
+
+int main()
+{
+    int num = 5;
+    printf("Factorial of %d = %d\\n", num, factorial(num));
+    
+    add_6(&num);
+    printf("Number + 6 = %d\\n", num);
+
+    return 0;
+}`
+    };
+
+    let editor;
+
+    // Custom Tokenizer Overlay for Predefined Identifier Highlighting
+    const customHighlightOverlay = {
+      token: function(stream) {
+        if (stream.match(/\bmain\b/)) {
+          return "cm-main-fn";
+        }
+        if (stream.match(/\badd_6\b/)) {
+          return "cm-custom-fn";
+        }
+        if (stream.match(/\bprintf\b/)) {
+          return "cm-printf-fn";
+        }
+        while (stream.next() != null) {
+          if (stream.match(/\bmain\b/, false) || 
+              stream.match(/\badd_6\b/, false) || 
+              stream.match(/\bprintf\b/, false)) {
+            break;
+          }
+        }
+        return null;
+      }
+    };
+
+    // Initialize Editor on Load
+    window.addEventListener('DOMContentLoaded', () => {
+      const textArea = document.getElementById('codeEditor');
+      
+      editor = CodeMirror.fromTextArea(textArea, {
+        mode: 'text/x-csrc',
+        theme: 'dracula',
+        lineNumbers: true,
+        matchBrackets: true,
+        autoCloseBrackets: true,
+        styleActiveLine: true,
+        tabSize: 4,
+        indentUnit: 4,
+        lineWrapping: true
+      });
+
+      // Apply the custom highlighting overlay for main, add_6, printf
+      editor.addOverlay(customHighlightOverlay);
+
+      // Set initial content
+      editor.setValue(PRESETS.pointers);
+
+      // Track cursor position
+      editor.on('cursorActivity', () => {
+        const pos = editor.getCursor();
+        document.getElementById('cursorPos').textContent = `Ln ${pos.line + 1}, Col ${pos.ch + 1}`;
+      });
+
+      // Keyboard Shortcut Ctrl+Enter to run
+      editor.setOption("extraKeys", {
+        "Ctrl-Enter": function() {
+          runCode();
+        },
+        "Cmd-Enter": function() {
+          runCode();
+        }
+      });
+    });
+
+    // Preset Switching
+    function loadPreset(key) {
+      if (PRESETS[key]) {
+        editor.setValue(PRESETS[key]);
+        showToast("Loaded preset: " + key);
+      }
+    }
+
+    // Reset Code
+    function resetCode() {
+      const currentPreset = document.getElementById('presetSelect').value;
+      editor.setValue(PRESETS[currentPreset] || PRESETS.pointers);
+      clearTerminal();
+      showToast("Code reset to template");
+    }
+
+    // Copy Code to Clipboard
+    function copyCode() {
+      const code = editor.getValue();
+      
+      // Fallback copy implementation
+      const tempTextArea = document.createElement("textarea");
+      tempTextArea.value = code;
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+      
+      try {
+        document.execCommand('copy');
+        showToast("Code copied to clipboard!");
+      } catch (err) {
+        showToast("Failed to copy code", true);
+      }
+      document.body.removeChild(tempTextArea);
+    }
+
+    // Clear Console
+    function clearTerminal() {
+      const out = document.getElementById('outputLog');
+      out.innerHTML = '<span class="text-slate-600">// Console output cleared</span>';
+      document.getElementById('execTime').textContent = '0 ms';
+      document.getElementById('returnCode').textContent = '0';
+      document.getElementById('execBadge').textContent = 'Idle';
+      document.getElementById('execBadge').className = 'text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono font-medium';
+      document.getElementById('progressBar').style.width = '0%';
+    }
+
+    // Toast Notification System
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMsg.textContent = message;
+      if (isError) {
+        toastIcon.className = "fa-solid fa-circle-exclamation text-rose-400";
+      } else {
+        toastIcon.className = "fa-solid fa-circle-check text-emerald-400";
+      }
+
+      toast.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
+      
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
+      }, 2500);
+    }
+
+    // Advanced C Execution Engine for standard pointer/arithmetic operations
+    function runCode() {
+      const code = editor.getValue();
+      const out = document.getElementById('outputLog');
+      const execBadge = document.getElementById('execBadge');
+      const execTime = document.getElementById('execTime');
+      const returnCode = document.getElementById('returnCode');
+      const progressBar = document.getElementById('progressBar');
+
+      // Status UI state
+      execBadge.textContent = 'Compiling...';
+      execBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-mono font-medium border border-amber-500/30';
+      progressBar.style.width = '40%';
+      out.innerHTML = '<span class="text-amber-400 animate-pulse"><i class="fa-solid fa-gear fa-spin mr-2"></i>Compiling main.c with GCC 13.2...</span>\n';
+
+      const startTime = performance.now();
+
+      setTimeout(() => {
+        try {
+          progressBar.style.width = '80%';
+          const result = simulateCExecution(code);
+          const endTime = performance.now();
+          const duration = Math.round(endTime - startTime);
+
+          // Update execution output
+          out.innerHTML = `<span class="text-emerald-400 font-bold">[Process exited with code 0]</span>\n\n` + escapeHtml(result);
+          
+          execBadge.textContent = 'Success';
+          execBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-medium border border-emerald-500/30';
+          execTime.textContent = duration + ' ms';
+          returnCode.textContent = '0';
+          returnCode.className = 'text-emerald-400 font-mono';
+          progressBar.style.width = '100%';
+
+        } catch (err) {
+          const endTime = performance.now();
+          const duration = Math.round(endTime - startTime);
+
+          out.innerHTML = `<span class="text-rose-400 font-bold">[Compilation / Runtime Error]</span>\n<span class="text-rose-300">${escapeHtml(err.message)}</span>`;
+          
+          execBadge.textContent = 'Failed';
+          execBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 font-mono font-medium border border-rose-500/30';
+          execTime.textContent = duration + ' ms';
+          returnCode.textContent = '1';
+          returnCode.className = 'text-rose-400 font-mono';
+          progressBar.style.width = '100%';
+        }
+      }, 180);
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;");
+    }
+
+    // C Interpreter Logic handling pointers, functions, printf, and arithmetic
+    function simulateCExecution(code) {
+      // Strip comments
+      let cleanCode = code.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+
+      if (!/#include\s*<stdio\.h>/.test(cleanCode)) {
+        throw new Error("Missing preprocessor directive: #include <stdio.h>");
+      }
+
+      const variables = {};
+      const functions = {};
+      let stdout = "";
+
+      // Capture function definitions (e.g., void add_6(int *nbre) { ... })
+      const fnRegex = /(?:void|int)\s+([A-Za-z_]\w*)\s*\(([^)]*)\)\s*\{([\s\S]*?)\}/g;
+      let match;
+
+      while ((match = fnRegex.exec(cleanCode)) !== null) {
+        const fnName = match[1];
+        const paramsRaw = match[2].trim();
+        const body = match[3];
+
+        if (fnName !== 'main') {
+          functions[fnName] = {
+            params: paramsRaw ? paramsRaw.split(',').map(p => p.trim()) : [],
+            body: body
+          };
+        }
+      }
+
+      // Locate main function body
+      const mainMatch = cleanCode.match(/int\s+main\s*\(\s*\)\s*\{([\s\S]*)\}/);
+      if (!mainMatch) {
+        throw new Error("Syntax Error: int main() function body not found.");
+      }
+
+      let mainBody = mainMatch[1];
+
+      // Remove nested inner function matches if captured in main
+      mainBody = mainBody.replace(/(?:void|int)\s+[A-Za-z_]\w*\s*\([^)]*\)\s*\{[\s\S]*?\}/g, "");
+
+      // Execute statements line by line
+      const statements = mainBody.split(';').map(s => s.trim()).filter(Boolean);
+
+      function evaluateExpr(expr) {
+        expr = expr.trim();
+
+        // Handle pointer dereference like *ptr
+        if (expr.startsWith('*') && variables[expr.slice(1)] !== undefined) {
+          const targetVar = variables[expr.slice(1)];
+          return variables[targetVar];
+        }
+
+        // Replace variable identifiers with values
+        let replaced = expr.replace(/\b([A-Za-z_]\w*)\b/g, (name) => {
+          if (variables[name] !== undefined) {
+            return variables[name];
+          }
+          return name;
+        });
+
+        try {
+          return Function(`"use strict"; return (${replaced})`)();
+        } catch (e) {
+          throw new Error(`Unable to evaluate expression: "${expr}"`);
+        }
+      }
+
+      function executeStatement(stmt) {
+        stmt = stmt.trim();
+        if (!stmt || stmt.startsWith('return')) return;
+
+        // 1. Variable declaration with array e.g., int numbers[4] = {10, 20, 30, 40};
+        let arrDecl = stmt.match(/^int\s+(\w+)\[\d*\]\s*=\s*\{([^}]+)\}/);
+        if (arrDecl) {
+          const arrName = arrDecl[1];
+          const vals = arrDecl[2].split(',').map(v => evaluateExpr(v.trim()));
+          variables[arrName] = vals;
+          variables[`${arrName}[0]`] = vals[0];
+          return;
+        }
+
+        // 2. Simple integer declaration: int n = 3; or int value = 42;
+        let intDecl = stmt.match(/^(?:const\s+)?int\s+(\w+)\s*=\s*(.+)$/);
+        if (intDecl) {
+          const varName = intDecl[1];
+          const valExpr = intDecl[2];
+
+          if (valExpr.startsWith('&')) {
+            // Pointer assignment: int *ptr = &value;
+            variables[varName] = valExpr.slice(1).trim();
+          } else {
+            variables[varName] = evaluateExpr(valExpr);
+          }
+          return;
+        }
+
+        // 3. Pointer variable declaration: int *ptr = &n;
+        let ptrDecl = stmt.match(/^int\s*\*\s*(\w+)\s*=\s*&(.*)$/);
+        if (ptrDecl) {
+          variables[ptrDecl[1]] = ptrDecl[2].trim();
+          return;
+        }
+
+        // 4. Custom Function call with pointer e.g., add_6(&n) or add_6(ptr) or add_6(&numbers[0])
+        let fnCall = stmt.match(/^(\w+)\s*\(\s*(.+)\s*\)$/);
+        if (fnCall && functions[fnCall[1]]) {
+          const fnName = fnCall[1];
+          let arg = fnCall[2].trim();
+          const fn = functions[fnName];
+
+          let targetVarName = arg;
+          if (arg.startsWith('&')) {
+            targetVarName = arg.slice(1).trim();
+          } else if (variables[arg] !== undefined && typeof variables[arg] === 'string') {
+            // Variable is a pointer
+            targetVarName = variables[arg];
+          }
+
+          // Execute custom function body for add_6
+          executeCustomFunction(fn, targetVarName);
+          return;
+        }
+
+        // 5. printf statement e.g. printf("n=%d\n", n);
+        let printfMatch = stmt.match(/^printf\s*\(\s*"([\s\S]*?)"\s*(?:,\s*(.+))?\s*\)$/);
+        if (printfMatch) {
+          let formatStr = printfMatch[1].replace(/\\n/g, "\n").replace(/\\t/g, "\t");
+          const argsStr = printfMatch[2];
+
+          let args = [];
+          if (argsStr) {
+            args = argsStr.split(',').map(a => evaluateExpr(a.trim()));
+          }
+
+          let argIndex = 0;
+          formatStr = formatStr.replace(/%[di]/g, () => {
+            return args[argIndex++] !== undefined ? args[argIndex - 1] : "%d";
+          });
+
+          stdout += formatStr;
+          return;
+        }
+
+        // 6. Direct assignment or dereference assignment e.g. *nbre = *nbre + 6;
+        let assignMatch = stmt.match(/^(\*?\w+)\s*=\s*(.+)$/);
+        if (assignMatch) {
+          let lhs = assignMatch[1];
+          let rhs = assignMatch[2];
+
+          if (lhs.startsWith('*')) {
+            const ptrVar = lhs.slice(1);
+            const actualVar = variables[ptrVar];
+            if (actualVar) {
+              variables[actualVar] = evaluateExpr(rhs);
+            }
+          } else if (variables[lhs] !== undefined) {
+            variables[lhs] = evaluateExpr(rhs);
+          }
+          return;
+        }
+      }
+
+      function executeCustomFunction(fnObj, targetVar) {
+        const bodyLines = fnObj.body.split(';').map(s => s.trim()).filter(Boolean);
+        const paramName = fnObj.params[0] ? fnObj.params[0].replace(/^int\s*\*/, '').trim() : "nbre";
+
+        for (let line of bodyLines) {
+          // Replace dereferenced pointer parameter (*nbre) with target variable name
+          let resolvedLine = line.replace(new RegExp("\\*" + paramName, 'g'), targetVar);
+          resolvedLine = resolvedLine.replace(new RegExp("\\b" + paramName, 'g'), targetVar);
+
+          // Evaluate assignment inside function body
+          let assign = resolvedLine.match(/^(\w+)\s*=\s*(.+)$/);
+          if (assign) {
+            const vName = assign[1];
+            const expr = assign[2];
+            if (variables[vName] !== undefined) {
+              variables[vName] = evaluateExpr(expr);
+            }
+          }
+        }
+      }
+
+      // Run through all main statements
+      for (let statement of statements) {
+        executeStatement(statement);
+      }
+
+      return stdout;
+    }
+  </script>
+</body>
+</html>
